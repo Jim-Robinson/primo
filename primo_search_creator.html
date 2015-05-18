@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>Primo Deep Search Creator</title>
+	
+<!--******************************************************************************-->
+<!-- Begin Scripts -->
+<!--*****************************************************************************/-->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+	<script type="text/javascript">
+		/**
+		 * Creates a widget or a link for Primo Basic Searches.
+		 * Based on Brief Search documentation on http://developer.exlibrisgroup.com
+		 * Primo Deep Search Creator
+		 * @author Jim Robinson
+		 * @copyright Tarrant County College District 2015
+		 * @version 1.0 
+		 *
+		 * @description
+		 * The following settings will need to ce customized for your institution.
+		 * Instructions for how to find the settings in your Primo are included.
+		 * Most settings can be found without access to Back Office with a little work.
+		 * domain_name
+		 * institution_code
+		 * view_code
+		 * tab_names
+		 * scopes
+		 * facet_types
+		 * facet_values (for drop-down lists)
+		 * field_names
+		 */
+		
+		
+		
+		/**
+		 * Domain Name:
+		 * Front End: Perform a basic search and from the resulting URL, take
+		 * everything from 'http://' to the first slash ('/primo_library/')
+		 *
+		 * @var {string} domain_name
+		 * @example 
+		 * var domain_name = "http://primo-pmtna01.hosted.exlibrisgroup.com"
+		 */
+		var domain_name = "http://primo-pmtna01.hosted.exlibrisgroup.com";
+		
+		
+		
+		/**
+		 * Institution Code:
+		 * Front End: Perform a basic search and from the resulting URL, take
+		 * the parameter after 'institution='
+		 *
+		 * Back Office: Ongoing Configuration Wizard -> Institution Wizard
+		 * For your institution, click 'Edit'
+		 * Use the attribute labelled 'Institution Code'
+		 *
+		 * @var {string} institution_code
+		 * @example
+		 * var institution_code = "TCC_CODE";
+		 */
+		var institution_code = "TCCDALMA";
+		
+		
+		
+		/**
+		 * View Code:
+		 * Front End: Perform a basic search and from the resulting URL, take
+		 * the parameter after 'vid='
+		 *
+		 * Back Office: Ongoing Configuration Wizard -> Views Wizard
+		 * For your default (or desired) view,
+		 * use the attribute in the 'Code' column
+		 *
+		 * @var {string} view_code
+		 * @example 
+		 * var view_code = "TCC_VIEW";
+		 */
+		var view_code = "TCCDALMA";
+		
+		
+		
+		/**********************************************************************
+		 * Tab Names:
+		 * Front End: Perform a basic search and from the resulting URL, take
+		 * the parameter after 'tab='. Do this for each tab.
+		 *
+		 * Back Office: Ongoing Configuration Wizard -> Views Wizard
+		 * For your default (or desired) view, click 'Edit'
+		 * Click through to 'Tabs', use the attributes in the 'Tab Code' column, 
+		 *
+		 * NOTE: TAB CODES MUST BE LOWER CASE! These are the codes to the left of the colon.
+		 * The value to the right of the colon will display in the drop-down.
+		 *
+		 * @var {object} tab_names
+		 * @example
+		 * var tab_name = {
+		 *     "everything":"Everything",
+		 *     "books":"Books+",
+		 *     "articles":"Articles+"
+		 * }
+		 *********************************************************************/
+		var tab_names = {
+			"everything"	:"Everything",
+			"books"			:"Books+",
+			"articles"		:"Articles+"
+		}
+		
+		
+		/**********************************************************************
+		 * Scopes:
+		 * Front End: Perform a basic search using a drop-down list.
+		 * In the URL, look for the value after &scp.scps=
+		 * and take everything between 'scope%3A%28' and '%29'
+		 *
+		 * Back Office: Ongoing Configuration Wizard -> Views Wizard
+		 * For your default (or desired) view, click 'Edit'
+		 * Click through to 'Scopes List', use the attributes in the 'Name' 
+		 * column for each scope you'd like to have available.
+		 * The value to the right of the colon will display in the drop-down.
+		 *
+		 * @var {object} scopes
+		 * @example
+		 * var scopes = {
+		 *     "TCC_EVERYTHING":"All TCC Resources",
+		 *     "TCC_Trinity_Library":"Trinity River Library",
+		 *     "TCC_EBOOK":"Ebooks Only"
+		 * }
+		 *********************************************************************/
+		var scopes = {
+			"TCCDALMA_EVERYTHING"		:"All TCC Resources",
+			"TCCDALMA_Northeast_Library":"Northeast Library",
+			"TCCDALMA_Northwest_Library":"Northwest Library",
+			"TCCDALMA_South_Library"	:"South Library",
+			"TCCDALMA_Southeast_Library":"Southeast Library",
+			"TCCDALMA_Trinity_Library"	:"Trinity River Library",
+			"TCCDALMA_PHYSICAL"			:"Physical Items",
+			"TCCDALMA_EBOOK"			:"Ebooks",
+			"PCI_EBSCO"					:"Primo Central and EBSCO",
+			"PCI"						:"Primo Central (No EBSCO)",
+			"EBSCO"						:"EBSCO Only"
+		}
+		
+		
+		
+		/**********************************************************************
+		 * Facets:
+		 * Front End: Perform a basic search, click a facet, then take the 
+		 * value after 'fctN='
+		 *
+		 * Back Office: Advanced Configuration -> All Code Tables
+		 * Subsystem: Front End, Table Name: Facet Code Fields.
+		 * Select the codes for facets you would like to have available.
+		 *
+		 * @var {object} facet_types
+		 * @example
+		 * var facet_types = {
+		 *     "facet_none":"Choose Facet",
+		 *     "facet_creator":"Author/Creator",
+		 *     "facet_rtype":"Resource Type"
+		 * }
+		 *********************************************************************/
+		var facet_types = {
+			"facet_none"		:"Choose Facet",
+			"facet_rtype"		:"Resource Type",
+			"facet_tlevel"		:"Top Level Facet (Full-text of Available)",
+			"facet_creator"		:"Author/Creator",
+			"facet_lang"		:"Language",
+			"facet_topic"		:"Subject",
+			"facet_creationdate":"Creation Date (Year Range)",
+			"facet_date_range"	:"Creation Date (Exact Date Range)",
+			"facet_fmt"			:"Format"
+		}
+		
+		
+		/**********************************************************************
+		 * Facet Values:
+		 * This object is used for any facet you wish to limit by providing
+		 * a drop-down list instead of an open text field. These are usually
+		 * values found in their own Code Table in Back Office. Each attribute
+		 * must match an attribute from the facet_type object above, followed
+		 * by a list of options for the drop-down box.
+		 *
+		 * Front End: Perform a Basic Search, click a facet, then take the
+		 * value after 'fctV=' for each facet type.
+		 *
+		 * Back Office: Advanced Configuration -> All Code Tables
+		 * Subsystem: Front End, then find the Facet table (for example, 
+		 * Top Level Facet table or Facet Resource Type table)
+		 * Use the value after the last period.
+		 *
+		 * @var {object} facet_values
+		 * @example
+		 * var facet_values = {
+		 *     "facet_rtype": [ <<==Note: This is the facet type from the facet_types object above
+		 *         {"name":"Books",   "value":"books"},
+		 *         {"name":"DVDs",    "value":"dvds"},
+		 *         {"name":"Audio",   "value":"media"}
+		 *     ],
+		 *     "facet_tlevel": [
+		 *         {"name":"Full Text Online",	"value":"online_resources"},
+		 *         {"name":"Available in the Library",	"value":"available" }
+		 *     ]
+		 * }
+		 **********************************************************************/
+		var facet_values = {
+			"facet_rtype": [
+				{"name":"Books",	"value":"books"}, 
+				{"name":"DVD",		"value":"dvds"},
+				{"name":"Journals",	"value":"journals"},
+				{"name":"Blu-ray",	"value":"blu-ray_discs"},
+				{"name":"Audio",	"value":"media"}
+			],
+			
+			"facet_tlevel": [
+				{"name":"Full Text Online",	"value":"online_resources"},
+				{"name":"Available in the Library",	"value":"available" }
+			]
+		}
+		
+		
+		/**********************************************************************
+		 * Available Field Values:
+		 * These are the fields that can be searched.
+		 *
+		 * Back Office: Advanced Configuration -> All Code Tables
+		 * Subsystem: Front End, Table Name: Basic Index Fields
+		 *
+		 * @var {object} field_names
+		 * @example
+		 * var field_names = {
+		 *     any:"Everything",
+		 *     title:"Title",
+		 *     creator:"Creator / Author",
+		 *     isbn:"ISBN"
+		 * }
+		 **********************************************************************/
+		var field_names = {
+			"any"		:"Everything",
+			"title"		:"Title",
+			"creator"	:"Creator / Author",
+			"sub"		:"Subject",
+			"desc"		:"Description",
+			"isbn"		:"ISBN",
+			"issn"		:"ISSN",
+			"rtype"		:"Resource Type",
+			"rectype"	:"Record Type",
+			"dlink"		:"Down Link",
+			"ftext"		:"Full Text",
+			"general"	:"General",
+			"toc"		:"TOC",
+			"fmt"		:"Format",
+			"lang"		:"Language",
+			"cdate"		:"Creation date",
+			"sid"		:"Source ID",
+			"rid"		:"Record ID",
+			"addsrcrid"	:"Additional source ID",
+			"addtitle"	:"Additional title",
+			"pnxtype"	:"PNX type",
+			"alttitle"	:"Alternative Title"
+		}
+		
+		
+
+/******************************************************************************
+ * There is probably no need to change anything below this point...
+ *****************************************************************************/
+		var pages = {};
+		for(var x=0; x<10; x++) {
+			pages[x] = x+1;
+		}
+		
+		var records_per_page = {};
+		for(var x=10; x<=100; x+=10) {
+			records_per_page[x] = x;
+		}
+		
+		var sort_types = {
+			"default"	:"relevance",
+			"stitle"	:"title",
+			"sauthor"	:"author",
+			"popularity":"popularity"
+		}
+		
+		var precision = {
+			"contains"	 :"Contains",
+			"exact"		 :"Exact Match",
+			"begins_with":"Begins With (For Title Searches Only)"
+		}
+		
+		var removed_facet_types = {};
+		
+		$('document').ready( function() {
+			$('#hints').hide();
+			$('#toggle_hints').on('click', function() {
+				$('#hints').toggle();
+			});
+			
+			$('#examples').hide();
+			$('#toggle_examples').on('click', function() {
+				$('#examples').toggle();
+			});
+			
+			/** populate Primo Information fields */
+			if(domain_name.length>0) $('#domain_name').val(domain_name);
+			if(institution_code.length>0) $('#institution_code').val(institution_code);
+			if(view_code.length>0) $('#view_code').val(view_code);
+			
+			/** Set up date picker for exact date range */
+			$('body').on('focus','.add_datepicker', function() {
+				$(this).datepicker({
+					dateFormat: 'yymmdd',
+					changeMonth: true,
+					changeYear: true,
+					onClose: function(selectedDate) {
+						checkDate($(this),selectedDate);
+					}
+				});
+			});
+			
+			/** Hide facet values and add_facet_buttons until a facet type is selected */
+			$('#facet_values_0').hide();
+			$('#add_facet_button_0').hide();
+			
+			/** populate select elements */
+			$.each(tab_names, function(index,value) {
+				$('#search_tab').append($("<option>").text(value).attr('value',index));
+			});
+			
+			$.each(pages, function(index,value) {
+				$('#search_page').append($("<option>").text(value).attr('value',index));
+			});
+			
+			$.each(records_per_page, function(index,value) {
+				$('#search_rpp').append($("<option>").text(value).attr('value',index));
+			});
+			
+			$.each(field_names, function(index,value) {
+				$('#search_field').append($("<option>").text(value).attr('value',index));
+			});
+			
+			$.each(precision, function(index,value) {
+				$('#precision_field').append($("<option>").text(value).attr('value',index));
+			});
+			
+			$.each(sort_types, function(index,value) {
+				$('#sort_field').append($("<option>").text(value).attr('value',index));
+			});
+			
+			$.each(scopes, function(index,value) {
+				$('.scope_field').append($("<option>").text(value).attr('value',index));
+			});
+			
+			$.each(facet_types, function(index,value) {
+				$('.facet_type_select').append($("<option>").text(value).attr('value',index));
+			});
+			
+			/** perform actions when selections are made or buttons clicked */
+			$('.facet_type_select').on('change', function() {
+				getFacetValue($(this));
+			});
+			
+			$('#add_facet_0').on('click', function() {
+				createFacetSelector();
+			});
+			
+			$('#doSubmit').on('click', function() {
+				createDeepSearchLink();
+			});
+			
+			$('#doClear').on('click', function() {
+				$('.facet_type_select').each(function() {
+					var id = $(this).attr('id');
+					var index = id.slice(id.lastIndexOf('_'));
+					if(index!='_0') {
+						$('#facet'+index).remove();
+					}
+				});
+				$('select').each( function() {
+					$(this).val($(this).find("option:first").val());
+				});
+				$('#search_criteria').val('');
+				$('#view_label').val('');
+				$('#result').val('');
+			});
+			
+			$('#precision_field').on('change', function() {
+				if($(this).val() == 'begins_with') {
+					$('#search_field').val('title');
+				}
+			});
+			
+			$('#search_field').on('change', function() {
+				if($(this).val() != 'title') {
+					if($('#precision_field').val() == 'begins_with') {
+						$('#precision_field').val('contains');
+					}
+				}
+			});
+		});
+		
+		
+		
+		/**
+		 * Creates a facet value drop-down or text field based on the facet type selected
+		 *
+		 * @param {object} facet_type_obj - The facet type selected
+		 */
+		function getFacetValue(facet_type_obj) {
+			$('.facet_type_select').each( function(x, y) {
+				var valueSelected = $(this).val();
+				var id = $(this).attr('id');
+				var index = id.slice(id.lastIndexOf('_'));
+				var parent_id = id;
+				if(!isEmpty(facet_type_obj)) parent_id = facet_type_obj.attr('id');
+				
+				if(parent_id == id) {
+					$('#facet_value_field'+index).find('option').remove().end(); // remove old values
+					
+					$('#facet_creationdate_end_date'+index).remove();
+					$('#facet_value_end_date'+index).remove();
+					$('#to'+index).remove();
+					
+					switch(true) {
+						case (valueSelected=='facet_none'):
+							$('#facet_values'+index).hide();
+							$('#add_facet_button'+index).hide();
+							break;
+							
+						case (valueSelected=='facet_creationdate'):
+							$('#facet_values'+index).show();
+							var $start_date = $('<input>', {id:'facet_value_field'+index, name:'facet_value_start_date', class:'date_range', maxlength:'4' });
+							var $end_date   = $('<input>', {id:'facet_creationdate_end_date'+index, name:'facet_value_end_date', class:'date_range', maxlength:'4' });
+							var $date_range = $('<div>', {class: 'col'});
+							var $to = $('<span>', {id:'to'+index,text:' to '});
+							$date_range.append($start_date).append($to).append($end_date);
+							$('#facet_value_field'+index).replaceWith($date_range);
+							$('#add_facet_button'+index).show();
+							break;
+							
+						case (valueSelected=='facet_date_range'):
+							$('#facet_values'+index).show();
+							var $start_date = $('<input>', {id:'facet_value_field'+index, name:'facet_value_start_date',class:'add_datepicker', maxlength:'10' });
+							var $end_date   = $('<input>', {id:'facet_value_end_date'+index, name:'facet_value_end_date',class:'add_datepicker', maxlength:'10' } );
+							var $date_range = $('<div>', {class: 'col'});
+							var $to = $('<span>', {id:'to'+index,text:' to '});
+							$date_range.append($start_date).append($to).append($end_date);
+							$('#facet_value_field'+index).replaceWith($date_range);
+							$('#add_facet_button'+index).show();
+							break;
+							
+						case (!isEmpty(facet_values[valueSelected])):
+							$('#facet_values'+index).show();
+							$('#facet_value_field'+index).replaceWith($("<select>").attr('name','facet_value_field'+index).attr('id','facet_value_field'+index));
+							$.each(facet_values[valueSelected], function(obj) {
+								$('#facet_value_field'+index).append($("<option>").text(facet_values[valueSelected][obj].name).attr('value',facet_values[valueSelected][obj].value));
+							});
+							$('#add_facet_button'+index).show();
+							break;
+							
+						default:
+							$('#facet_values'+index).show();
+							$('#facet_value_field'+index).replaceWith($("<input>").attr('type','text').attr('name','facet_value_field'+index).attr('id','facet_value_field'+index));
+							$('#add_facet_button'+index).show();
+					}
+				}
+			});
+		}
+		
+		/**
+		 * Adds a row with a facet type selector.
+		 *
+		 * Finds the last facet row added and increments the index
+		 *
+		 * The manageFacetTypes(string) function called near the end
+		 * is used to remove a facet type once it has been used.
+		 * To disable this, comment out the call to 
+		 * manageFacetTypes('__add'); in function createFacetSelector() and
+		 * manageFacetTypes(value); in function removeFacetSelector(element)
+		 *
+		 */
+		function createFacetSelector() {
+			var last = $('.facet_type_select').last().attr('id');
+			var index = last.slice(last.lastIndexOf('_')+1);
+			index++;
+			
+			/** Facet Type Row */
+			var $facet_type_label = $("<label for='facet_type_field_"+index+"'>Facet Type</label>");
+			var $facet_type_label_div = $('<div>', { class:'col label'});
+			$facet_type_label_div.append($facet_type_label);
+			
+			$('#facet_type_field_'+index).find('option').remove().end();
+			
+			var $facet_type_input = $('<select>', {id:'facet_type_field_'+index, class:'facet_type_select'});
+			var $facet_type_input_div = $('<div>', {class:'col input'});
+			$facet_type_input_div.append($facet_type_input);
+			
+			var $facet_type_div = $("<div>", {id:'facet_types_'+index, class:'col'});
+			$facet_type_div.append($facet_type_label_div);
+			$facet_type_div.append($facet_type_input_div);
+			
+			/** Facet Value Row */
+			var $facet_value_label = $("<div class='col label'><label for='facet_value_field_"+index+"'>Facet Value</label></div>");
+			var $facet_value_input = $("<div class='col'><select id='facet_value_field_"+index+"' class='facet_value_select'></select></div>");
+			var $facet_value_div = $("<div>", {id:'facet_values_'+index, class:'col'});
+			$facet_value_div.append($facet_value_label);
+			$facet_value_div.append($facet_value_input);
+			
+			/** Facet Add/Remove Buttons */
+			var $facet_add_button = $('<input>', { type:'button', value:'+', id:'add_facet_'+index, class:'add_facet_button', click: function() { createFacetSelector(); } });
+			var $facet_add_div = $('<div>', { id:'add_facet_button_'+index, class:'col' });
+			$facet_add_div.append($facet_add_button);
+			
+			var $facet_remove_button = $('<input>', { type:'button', value:'-', id:'remove_facet_'+index, class:'remove_facet_button', click: function() { removeFacetSelector($(this)); } });
+			var $facet_remove_div = $('<div>', { id:'remove_facet_button_'+index, class:'col' });
+			$facet_remove_div.append($facet_remove_button);
+			
+			/** Create Facet Row */
+			var $newFacet = $('<div>', {id: 'facet_'+index, class: 'row'});
+			$newFacet.append($facet_type_div);
+			$newFacet.append($facet_value_div);
+			$newFacet.append($facet_add_div);
+			$newFacet.append($facet_remove_div);
+			
+			/** Add to interface */
+			$('#facets').append($newFacet);
+			$('#facets').on('change','#facet_type_field_'+index,function() {
+				getFacetValue($('#facet_type_field_'+index));
+			});
+
+			/** Hide facet value until facet type is selected */
+			$('#facet_values_'+index).hide();
+			
+			/** Remove used facet types from the object so they won't appear in new drop-down lists */
+			manageFacetTypes('__add');
+			
+			/** Populate new facet type drop-down list */
+			$my_facet_types = $(facet_types)[0];
+			for(var key in $my_facet_types) {
+				if(!isEmpty($my_facet_types[key])) {
+					$facet_type_input.append($('<option>').text($my_facet_types[key]).attr('value',key));
+				}
+			}
+			
+			
+		}
+		
+		/**
+		 * Removes a facet row when the '-' button is clicked
+		 *
+		 * The manageFacetTypes(value) function called near the end
+		 * is used to remove a facet type once it has been used.
+		 * To disable this, comment out the call to 
+		 * manageFacetTypes('__add'); in function createFacetSelector() and
+		 * manageFacetTypes(value); in function removeFacetSelector(element)
+		 *
+		 * @param {object} element - The button clicked which has the same index as the facet row
+		 */
+		function removeFacetSelector(element) {
+			var id = element.attr('id'); 
+			var index = id.slice(id.lastIndexOf('_'));
+			var value = $('#facet_type_field'+index+' option:selected').val();
+			manageFacetTypes(value);
+			$('#facet'+index).remove();
+		}
+		
+		/**
+		 * Adds a facet type row when a '+' button is clicked or
+		 * removes a facet row when a '-' button is clicked. Keeps track of
+		 * what has been added or removed in arrays.
+		 *
+		 * @param {String} status - Either __add for a new facet or the facet type to remove
+		 */
+		function manageFacetTypes(status) {
+			console.log(status);
+			$('.facet_type_select').each( function() {
+				var val = $(this).val();
+				if(val != 'facet_none' && !isEmpty(val) && status != 'facet_none') {
+					if(status=='__add') {
+						if(isEmpty(removed_facet_types[val])) {
+							removed_facet_types[val] = facet_types[val];
+						}
+						facet_types[val] = '';
+					} else {
+						if(!isEmpty(removed_facet_types[status])) {
+							facet_types[status] = removed_facet_types[status];
+							removed_facet_types[status] = '';
+						}
+					}
+				}
+			});
+		}
+		
+		/**
+		 * Handles conditional date for creation_date (exact date range)
+		 * 
+		 * @param {obj} element - The start date element
+		 * @param {string} selectedDate - The conditional date selected
+		 */
+		function checkDate(element,selectedDate) {
+			console.log(typeof(element));
+			if(element.attr('name') == 'facet_value_start_date') {
+				var id = element.attr('id'); 
+				var index = id.slice(id.lastIndexOf('_'));
+				$('#facet_value_end_date'+index).focus();
+				$('#facet_value_end_date'+index).datepicker("option","minDate",selectedDate);
+				$('#facet_value_end_date'+index).focus(); // refocus or the calendar disappears :(
+			}
+		}
+		
+		/**
+		 * Helper function to determine null, undefined, empty variables
+		 *
+		 * @param {obj} date - the variable to check
+		 */
+		function isEmpty(data) {
+			if(typeof(data) == 'number' || typeof(data) == 'boolean') {
+				return false;
+			}
+			if(typeof(data) == 'undefined' || data === null) {
+				return true;
+			}
+			if(typeof(data.length) != 'undefined') {
+				return data.length == 0;
+			}
+			var count=0;
+			for(var i in data) {
+				if(data.hasOwnProperty(i)) {
+					count++;
+				}
+			}
+			return count==0;
+		}
+		
+		
+		/**
+		 * Compiles all data input by the user and creates a widget or link
+		 *
+		 */
+		function createDeepSearchLink() {
+			var domain = $('#domain_name').val();
+			var institution = $('#institution_code').val();
+			var view = $('#view_code').val();
+			var label = $('#view_label').val();
+			var tab = $('#search_tab').val();
+			var page = $('#search_page').val();
+			var rpp = $('#search_rpp').val();
+			var scope = $('#scope_field').val();
+			var field = $('#search_field').val();
+			var precision = $('#precision_field').val();
+			var criteria = $('#search_criteria').val();
+			var srt = $('#sort_field option:selected').text();
+			var sortField = $('#sort_field option:selected').val();
+			
+			var indx = rpp * page + 1;
+			
+			if(!isEmpty(srt) && srt=='default') {
+				srt='';
+				sortField='';
+			} else {
+				srt = '&srt='+srt;
+				sortField = '&sortField='+sortField;
+			}
+			
+			var facet_query = '';
+			$('.facet_type_select').each( function() {
+				var id = $(this).attr('id');
+				index = id.slice(id.lastIndexOf('_'));
+				
+				var type = $('#facet_type_field'+index).val();
+				var value = $('#facet_value_field'+index).val();
+				
+				if(type == 'facet_creationdate') {
+					var start_date= $('#facet_value_field'+index).val();
+					var end_date= $('#facet_creationdate_end_date'+index).val();
+					if(!isEmpty(start_date) && !isEmpty(end_date)) {
+						value = '['+start_date+'+TO+'+end_date+']';
+					} else {
+						value = '';
+					}
+				}
+				
+				if(type == 'facet_date_range') {
+					var start_date = $('#facet_value_field'+index).val();
+					var end_date = $('#facet_value_end_date'+index).val();
+					if(!isEmpty(start_date) && !isEmpty(end_date)) {
+						facet_query += '&query=dr_s,exact,'+start_date+'&query=dr_e,exact,'+end_date;
+						type=value=null;
+					}
+				}
+				
+				if(!isEmpty(type) && !isEmpty(value)) {
+					if(type.length>0 && value.length>0) {
+						facet_query += '&query='+type+',exact,'+value
+					}
+				}
+			});
+			
+			var url = domain + '/primo_library/libweb/action/dlSearch.do?vid=' + view + '&institution=' + institution + '&tab=' + tab + '&indx=' + indx + '&bulkSize=' + rpp;
+			url += srt + sortField;
+			if(scope.length>0) url += '&search_scope=' + encodeURIComponent(scope);
+			url += '&query='+field+','+precision+',';
+			
+			/**
+			 * facets must come after the query or the first facet will appear in the search box on the results page.
+			 */
+			if(isEmpty(criteria)) {
+				$('#result').val('<div>\r   <script type="text/javascript">');
+				$('#result').val($('#result').val() + '\r      function s(){\r         ');
+				$('#result').val($('#result').val() + 'window.location="');
+				$('#result').val($('#result').val() + url + '"');
+				$('#result').val($('#result').val() + "+document" + "." + "getElementById" + "('c')" + "." + "value");
+				if(facet_query.length>0) $('#result').val($('#result').val() + '+"' + facet_query + '"');
+				$('#result').val($('#result').val() + ";\r      }" + "\r   </script" + ">");
+				$('#result').val($('#result').val() + "\r   <form><label for='c'>"+label+"</label><input type='text' id='c'><input type='button' value='search' onclick='s()'></form>\r</div>");
+			} else {
+				url += encodeURIComponent(criteria);
+				if(facet_query.length>0) url += facet_query;
+				
+				var link = "<a href='" + url + "'>";
+				link += isEmpty(label) ? 'Search for ' + criteria : label;
+				link += "</a>";
+					
+				$('#result').val(link);
+			}
+			
+			$('#result').select();
+		}
+	</script>
+	
+<!--******************************************************************************-->
+<!-- Begin Styles -->
+<!--*****************************************************************************/-->
+	<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css">
+	<style type="text/css">
+		body { font: 1.2em sans-serif; }
+		.instructions { font-size:.9em; }
+		#toggle_hints, #toggle_examples { cursor:pointer; color: blue; }
+		fieldset { border:1px solid #CECECE; margin:.2em 0;}
+		legend { font-weight:bold; font-size: .9em; padding: .1em; border:1px solid #CECECE; }
+		.row { clear:both; }
+		.col { float:left; }
+		.label { min-width:9em; text-align:right; padding:0 .5em 0 0; }
+		.input { min-width:15em; }
+		#result { width:98%; min-height:15em; }
+		.date_range { width:4em; }
+	</style>
+</head>
+
+
+<!--******************************************************************************-->
+<!-- Begin Body -->
+<!--******************************************************************************-->
+<body>
+	<h3>Primo Search Widget/Link Creator</h3>
+	
+	<div id='instructions' class='instructions'> 
+		<fieldset>
+			<legend>Instructions</legend>
+			<ol>
+				<li>Enter your criteria.</li>
+				<li>Click the <em>GO</em> button.</li>
+				<li>Copy the generated results and paste in your LibGuide page.</li>
+				<li><em id='toggle_hints'>hints</em> <em id='toggle_examples'>examples</em></li>
+			</ol>
+		</fieldset>
+	</div>
+	
+	
+	<div id='hints' class='instructions'>
+		<fieldset>
+			<legend>Hints</legend>
+			<ul>
+				<li>If <em>Search Criteria</em> is entered, a link will be created.</li>
+				<li>If <em>Search Criteria</em> is empty, a widget will be created where users can enter their own search criteria.</li>
+				<li>To create a basic search-everything widget, just click the <em>GO</em> button.</li>
+				<li>Make sure your search is feasible. Test it in Primo. If you search for... 
+					<ul>
+						<li><em>author</em> contains <em>stephen king</em></li>
+						<li><em>resource type</em> is <em>DVD</em></li>
+						<li><em>creation date range</em> from <em>1898</em> to <em>1899</em></li>
+					</ul>
+					...it's highly unlikely you will get any results.
+				</li>
+				<li>Only one scope is allowed per search, but multiple facets can be applied by clicking the <em>+</em> button to the right of the facets.</li>
+				<li>Facets are always applied with <em>exact</em> precision. (For example, <em>resource type</em> is <em>books</em>.)</li>
+				<li>To create a widget for searching DVDs on Trinity River campus:
+					<ol>
+						<li>Set <em>Tab</em> to <em>Books+</em> (not required)</li>
+						<li>Set <em>Scope</em> to <em>Trinity River Library</em></li>
+						<li>Set <em>Facet Type</em> to <em>Resource Type</em></li>
+						<li>Set <em>Facet Value</em> to <em>DVD</em></li>
+					</ol>
+				</li>
+			</ul>
+		</fieldset>
+	</div>
+	
+	<div id='examples' class='instructions'>
+		<fieldset>
+			<legend>Examples</legend>
+			<ol>
+				<li>To create a widget for searching DVDs on Trinity River campus:
+					<ol>
+						<li>Set <em>Tab</em> to <em>Books+</em> (not required)</li>
+						<li>Leave the <em>Search Criteria</em> text field blank.</li>
+						<li>Enter <em>Search DVDs at TR Library</em> in the <em>Widget/Link Label</em> text field.</li>
+						<li>Set <em>Scope</em> to <em>Trinity River Library</em></li>
+						<li>Set <em>Facet Type</em> to <em>Resource Type</em></li>
+						<li>Set <em>Facet Value</em> to <em>DVD</em></li>
+					</ol>
+				</li>
+				
+				<li>To create a link to books written by Shakespeare that are available in our library:
+					<ol>
+						<li>Set <em>Tab</em> to <em>Books+</em> (not required)</li>
+						<li>Set <em>Search Field</em> to <em>Creator / Author</em></li>
+						<li>Enter <em>Shakespeare</em> in the <em>Search Criteria</em> text field.</li>
+						<li>Enter <em>Books by Shakespeare</em> in the <em>Widget/Link Label</em> text field.</li>
+						<li>Set <em>Scope</em> to <em>Physical Items</em></li>
+						<li>Set <em>Facet Type</em> to <em>Resource Type</em></li>
+						<li>Set <em>Facet Value</em> to <em>Books</em></li>
+						<li>Add another facet by clicking the <em>+</em> button.</li>
+						<li>Set <em>Facet Type</em> to <Top Level Facet (Full-text or Available)</em></li>
+						<li>Set <em>Facet Value</em> to <em>Available in the Library</em></li>
+					</ol>
+				</li>
+			</ol>
+		</fieldset>
+	</div>
+	
+	<div id='main'>
+		<form method='get'>
+			<fieldset>
+				<legend>Primo Information</legend>
+				<div class='row'>
+					<div class='col label'>
+						<label for='domain_name'>Domain Name</label>
+					</div>
+					<div class='col input'>
+						<input type='text' id='domain_name' name='domain_name' />
+					</div>
+				</div>
+				
+				<div class='row'>
+					<div class='col label'>
+						<label for='institution_code'>Institution Code</label>
+					</div>
+					<div class='col input'>
+						<input type='text' id='institution_code' name='institution_code' />
+					</div>
+				</div>
+				
+				<div class='row'>
+					<div class='col label'>
+						<label for='view_code'>View Code</label>
+					</div>
+					<div class='col input'>
+						<input type='text' id='view_code' name='view_code' />
+					</div>
+				</div>
+			</fieldset>
+			
+			<fieldset>
+				<legend>Search Results</legend>
+				<div class='row'>
+					<div class='col label'>
+						<label for='search_tab'>Tab</label>
+					</div>
+					<div class='col input'>
+						<select id='search_tab' name='search_tab'></select>
+					</div>
+				</div>
+				
+				<div class='row'>
+					<div class='col label'>
+						<label for='search_page'>Start Page</label>
+					</div>
+					<div class='col input'>
+						<select id='search_page' name='search_page'></select>
+					</div>
+				</div>
+				
+				<div class='row'>
+					<div class='col label'>
+						<label for='search_rpp'>Records Per Page</label>
+					</div>
+					<div class='col input'>
+						<select id='search_rpp' name='search_rpp'></select>
+					</div>
+				</div>
+				
+				<div class='row'>
+					<div class='col label'>
+						<label for='sort_field'>Sort</label>
+					</div>
+					<div class='col input'>
+						<select id='sort_field' name='sort_field' class='sort_field'></select>
+					</div>
+				</div>
+			</fieldset>
+			
+			<fieldset>
+				<legend>Search Parameters</legend>
+				<div class='row'>
+					<div class='col label'>
+						<label for='search_field'>Search Field</label>
+					</div>
+					<div class='col input'>
+						<select id='search_field' name='search_field'></select>
+					</div>
+				</div>
+				
+				<div class='row'>
+					<div class='col label'>
+						<label for='precision_field'>Precision</label>
+					</div>
+					<div class='col input'>
+						<select id='precision_field' name='precision_field'></select>
+					</div>
+				</div>
+				
+				<div class='row'>
+					<div class='col label'>
+						<label for='search_criteria'>Search Criteria</label>
+					</div>
+					<div class='col input'>
+						<input type='text' id='search_criteria' name='search_criteria' /> (Leave blank to create a widget)
+					</div>
+				</div>
+				
+				<div class='row'>
+					<div class='col label'>
+						<label for='view_label'>Widget/Link Label</label>
+					</div>
+					<div class='col input'>
+						<input type='text' id='view_label' name='view_label' />
+					</div>
+				</div>
+			</fieldset>
+			
+			<fieldset>
+				<legend>Filters</legend>
+				<div class='row'>
+					<div class='col label'>
+						<label for='scope_field'>Scope</label>
+					</div>
+					<div class='col input'>
+						<select id='scope_field' name='scope_field' class='scope_field'></select>
+					</div>
+				</div>
+				
+				<div id='facets'>
+					<div id='facet_0' class='row'>
+						<div class='col'>
+							<div class='col label'>
+								<label for='facet_type_field_0'>Facet Type</label>
+							</div>
+							<div class='col input'>
+								<select id='facet_type_field_0' name='facet_type_field_0' class='facet_type_select'></select>
+							</div>
+						</div>
+						<div id='facet_values_0' class='col'>
+							<div class='col label'>
+								<label for='facet_value_field_0'>Facet Value</label>
+							</div>
+							<div class='col'>
+								<select id='facet_value_field_0' name='facet_value_field_0' class='facet_value_select'></select>
+							</div>
+						</div>
+						<div id='add_facet_button_0' class='col'>
+							<input type='button' id='add_facet_0' name='add_facet_0' class='add_facet_button' value='+' />
+						</div>
+					</div>
+				</div>
+			</fieldset>
+			
+			<div class='row'>
+				<div class='col label'>
+					<label for='doSubmit'>&nbsp;</label>
+				</div>
+				<div class='col'>
+					<input type='button' id='doSubmit' name='doSubmit' value='GO' />
+				</div>
+				<div class='col'>
+					<input type='button' id='doClear' name='doClear' value='clear' />
+				</div>
+			</div>
+		</form>
+		
+		<div class='row'>
+			<fieldset>
+				<legend>Results</legend>
+				<textarea id='result' name='result'></textarea>
+			</fieldset>
+		</div>
+	</div>
+	
+	
+</body>
+</html>
